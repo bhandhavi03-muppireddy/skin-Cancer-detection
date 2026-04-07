@@ -2,6 +2,5 @@ streamlit==1.33.0
 numpy==1.24.3
 pillow
 opencv-python-headless
-gdown
 tensorflow==2.13.0
 h5py
