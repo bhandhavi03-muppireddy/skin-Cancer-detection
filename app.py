@@ -48,6 +48,13 @@ def load_my_model():
     except Exception as e:
         st.error(f"❌ Model loading failed: {e}")
         return None
+ # =========================
+# Initialize Model
+# =========================
+model = load_my_model()
+
+if model is None:
+    st.stop()
 # =========================
 # Hair Removal Function
 # =========================
@@ -62,6 +69,8 @@ def remove_hair(image):
 # =========================
 # Upload Image
 # =========================
+
+
 uploaded_file = st.file_uploader("Upload Skin Image", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
