@@ -12,16 +12,42 @@ from tensorflow.keras.models import load_model
 st.set_page_config(page_title="Skin Cancer Detection", layout="centered")
 
 # =========================
+# Custom CSS (UI Upgrade)
+# =========================
+st.markdown("""
+    <style>
+    .title {
+        text-align: center;
+        font-size: 40px;
+        font-weight: bold;
+        color: #ff4b4b;
+    }
+    .subtitle {
+        text-align: center;
+        font-size: 18px;
+        color: #bbbbbb;
+    }
+    .result-box {
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# =========================
 # Title
 # =========================
-st.markdown("<h1 style='text-align:center;'>Skin Cancer Detection</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;'>Upload an image to check for BCC</p>", unsafe_allow_html=True)
+st.markdown('<p class="title">Skin Cancer Detection</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Upload an image to check for Basal Cell Carcinoma (BCC)</p>', unsafe_allow_html=True)
 
 # =========================
 # Model Config
 # =========================
 MODEL_PATH = "skin_cancer_model.h5"
-MODEL_URL = "https://drive.google.com/uc?id=1mMVUjC6vhE1Ot-F2lzOum00F2fB1K35o" 
+MODEL_URL = "https://drive.google.com/uc?id=1mMVUjC6vhE1Ot-F2lzOum00F2fB1K35o"
 
 # =========================
 # Load Model
@@ -29,17 +55,11 @@ MODEL_URL = "https://drive.google.com/uc?id=1mMVUjC6vhE1Ot-F2lzOum00F2fB1K35o"
 @st.cache_resource
 def load_my_model():
     if not os.path.exists(MODEL_PATH):
-        with st.spinner("Downloading model..."):
-            gdown.download(
-                MODEL_URL,
-                MODEL_PATH,
-                quiet=False,
-                fuzzy=True   # ✅ IMPORTANT FIX
-            )
+        with st.spinner("📥 Downloading AI model..."):
+            gdown.download(MODEL_URL, MODEL_PATH, quiet=False, fuzzy=True)
 
-    # 🔍 Check file size (to detect fake download)
-    if os.path.getsize(MODEL_PATH) < 1000000:  # <1MB = WRONG FILE
-        st.error("❌ Model file corrupted or not downloaded correctly")
+    if os.path.getsize(MODEL_PATH) < 1000000:
+        st.error("❌ Model file corrupted. Please re-upload.")
         return None
 
     try:
@@ -48,13 +68,12 @@ def load_my_model():
     except Exception as e:
         st.error(f"❌ Model loading failed: {e}")
         return None
- # =========================
-# Initialize Model
-# =========================
-model = load_my_model()
 
+# ✅ LOAD MODEL HERE
+model = load_my_model()
 if model is None:
     st.stop()
+
 # =========================
 # Hair Removal Function
 # =========================
@@ -67,33 +86,50 @@ def remove_hair(image):
     return result
 
 # =========================
-# Upload Image
+# Upload Section
 # =========================
-
-
-uploaded_file = st.file_uploader("Upload Skin Image", type=["jpg", "png", "jpeg"])
+uploaded_file = st.file_uploader("📤 Upload Skin Image", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
     try:
-        image = Image.open(uploaded_file).convert("RGB")  # ✅ force valid format
+        image = Image.open(uploaded_file).convert("RGB")
+
         st.image(image, caption="Uploaded Image", use_column_width=True)
 
-        # Preprocess
-        img = np.array(image)
-        img = cv2.resize(img, (128, 128))
-        img = remove_hair(img)
-        img = img.astype(np.float32) / 255.0
-        img = np.expand_dims(img, axis=0)
+        # Processing animation
+        with st.spinner("🔍 Analyzing image..."):
+            img = np.array(image)
+            img = cv2.resize(img, (128, 128))
+            img = remove_hair(img)
+            img = img.astype(np.float32) / 255.0
+            img = np.expand_dims(img, axis=0)
 
-        # Prediction
-        prediction = model.predict(img)[0][0]
+            prediction = model.predict(img)[0][0]
 
-        st.write("### Prediction Result")
+        # =========================
+        # Results
+        # =========================
+        st.write("## 🧾 Prediction Result")
+
+        confidence = float(prediction)
+
+        # Progress bar
+        st.progress(confidence if confidence < 1 else 1)
 
         if prediction > 0.5:
-            st.error(f"⚠️ Cancer Detected (Confidence: {prediction:.2f})")
+            st.markdown(f"""
+                <div class="result-box" style="background-color:#ffcccc;">
+                ⚠️ Cancer Detected <br>
+                Confidence: {confidence:.2f}
+                </div>
+            """, unsafe_allow_html=True)
         else:
-            st.success(f"✅ No Cancer Detected (Confidence: {1 - prediction:.2f})")
+            st.markdown(f"""
+                <div class="result-box" style="background-color:#ccffcc;">
+                ✅ No Cancer Detected <br>
+                Confidence: {1 - confidence:.2f}
+                </div>
+            """, unsafe_allow_html=True)
 
     except Exception as e:
         st.error(f"❌ Error processing image: {e}")
