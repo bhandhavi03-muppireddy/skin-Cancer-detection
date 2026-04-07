@@ -20,21 +20,24 @@ st.write("Upload an image to check for Basal Cell Carcinoma (BCC)")
 # =========================
 import gdown
 import os
+from tensorflow.keras.models import load_model
+
 @st.cache_resource
 def load_my_model():
     try:
         MODEL_PATH = "skin_cancer_model.h5"
 
         if not os.path.exists(MODEL_PATH):
-            url = "https://drive.google.com/uc?id=1mMVUjC6vhE1Ot-F2lzOum00F2fB1K35o"
-            gdown.download(url, MODEL_PATH, quiet=False)
+            url = "https://drive.google.com/uc?id=1mV-Lu6TBKBy2mUhEGBFnOhbd37921aF2"
+            gdown.download(url, MODEL_PATH, quiet=False, fuzzy=True)
 
         model = load_model(MODEL_PATH, compile=False)
         return model
+
     except Exception as e:
         st.error(f"❌ Model loading failed: {e}")
         return None
-model = load_my_model()
+model =load_my_model()
 
 if model is None:
     st.stop()
