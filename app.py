@@ -18,15 +18,22 @@ st.write("Upload an image to check for Basal Cell Carcinoma (BCC)")
 # =========================
 # Load Model (LOCAL ONLY)
 # =========================
+import gdown
+import os
 @st.cache_resource
 def load_my_model():
     try:
-        model = load_model("skin_cancer_model.h5", compile=False)
+        MODEL_PATH = "skin_cancer_model.h5"
+
+        if not os.path.exists(MODEL_PATH):
+            url = "https://drive.google.com/uc?id=1mMVUjC6vhE1Ot-F2lzOum00F2fB1K35o"
+            gdown.download(url, MODEL_PATH, quiet=False)
+
+        model = load_model(MODEL_PATH, compile=False)
         return model
     except Exception as e:
         st.error(f"❌ Model loading failed: {e}")
         return None
-
 model = load_my_model()
 
 if model is None:
